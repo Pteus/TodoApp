@@ -13,6 +13,7 @@ public static class TodoEndpoints
         app.MapGet("api/v1/todos/{id:int}", GetTodoById);
         app.MapPost("api/v1/todos", CreateTodo);
         app.MapDelete("api/v1/todos/{id:int}", DeleteTodo);
+        app.MapPut("api/v1/todos/{id:int}", UpdateTodo);
     }
 
     private static async Task<IResult> GetAllTodos(ITodoRepository repository, IMapper mapper)
@@ -45,6 +46,23 @@ public static class TodoEndpoints
     {
         await todoRepository.DeleteTodo(id);
         await todoRepository.SaveChanges();
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> UpdateTodo(ITodoRepository todoRepository, IMapper mapper, int id,
+        UpdateTodoRequest updateTodoRequest)
+    {
+        var todo = await todoRepository.GetTodo(id);
+
+        if (todo == null)
+        {
+            return Results.NotFound();
+        }
+
+        mapper.Map(updateTodoRequest, todo);
+
+        await todoRepository.SaveChanges();
+
         return Results.NoContent();
     }
 }

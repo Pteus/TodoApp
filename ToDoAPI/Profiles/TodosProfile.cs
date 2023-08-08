@@ -10,5 +10,6 @@ public class TodosProfile : Profile
     {
         CreateMap<TodoModel, GetTodoResponse>();
         CreateMap<CreateTodoRequest, TodoModel>();
+        CreateMap<UpdateTodoRequest, TodoModel>();
     }
 }
