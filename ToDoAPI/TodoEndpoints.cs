@@ -1,5 +1,4 @@
 using AutoMapper;
-using Microsoft.AspNetCore.Http.HttpResults;
 using ToDoAPI.DbAccess.TodoRepository;
 using ToDoAPI.Dtos;
 using ToDoAPI.Models;
@@ -10,8 +9,10 @@ public static class TodoEndpoints
 {
     public static void ConfigureToDoEndpoints(this WebApplication app)
     {
-        app.MapGet("api/v1/Todos", GetAllTodos);
-        app.MapGet("api/v1/Todos/{id:int}", GetTodoById);
+        app.MapGet("api/v1/todos", GetAllTodos);
+        app.MapGet("api/v1/todos/{id:int}", GetTodoById);
+        app.MapPost("api/v1/todos", CreateTodo);
+        app.MapDelete("api/v1/todos/{id:int}", DeleteTodo);
     }
 
     private static async Task<IResult> GetAllTodos(ITodoRepository repository, IMapper mapper)
@@ -25,5 +26,25 @@ public static class TodoEndpoints
         var result = await repository.GetTodo(id);
         
         return result != null ? Results.Ok(mapper.Map<GetTodoResponse>(result)) : Results.NotFound();
+    }
+
+    private static async Task<IResult> CreateTodo(ITodoRepository todoRepository, IMapper mapper,
+        CreateTodoRequest createTodoRequest)
+    {
+        var todoModel = mapper.Map<TodoModel>(createTodoRequest);
+
+        await todoRepository.CreateTodo(todoModel);
+        await todoRepository.SaveChanges();
+
+        var createdTodo = mapper.Map<GetTodoResponse>(todoModel);
+
+        return Results.Created($"api/v1/todos/{createdTodo.Id}", createdTodo);
+    }
+
+    private static async Task<IResult> DeleteTodo(ITodoRepository todoRepository, IMapper mapper, int id)
+    {
+        await todoRepository.DeleteTodo(id);
+        await todoRepository.SaveChanges();
+        return Results.NoContent();
     }
 }
